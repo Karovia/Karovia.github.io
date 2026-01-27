@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>学习结果 - U_learner</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/result.css">
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <div class="header-content">
+                <h1 class="logo">学习结果</h1>
+                <div class="back-button">
+                    <a href="index.html" class="back-link">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M19 12H5M12 19l-7-7 7-7"/>
+                        </svg>
+                        返回搜索
+                    </a>
+                </div>
+            </div>
+            <div class="topic-info">
+                <h2 id="resultTopic"></h2>
+                <p class="service-info" id="serviceInfo"></p>
+            </div>
+        </header>
+
+        <main class="main-content">
+            <!-- 标签页导航 -->
+            <nav class="tab-nav" id="tabNav">
+                <button class="tab-btn active" data-tab="content">📖 内容</button>
+                <button class="tab-btn" data-tab="mindmap">🧠 思维导图</button>
+                <button class="tab-btn" data-tab="animation">🎬 动画演示</button>
+            </nav>
+
+            <!-- 标签页内容 -->
+            <div class="tab-content" id="tabContent">
+                <!-- 内容标签页 -->
+                <div class="tab-pane active" id="contentPane">
+                    <div class="content-actions">
+                        <button class="action-btn download-pdf" id="downloadPdfBtn">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                                <polyline points="7 10 12 15 17 10"/>
+                                <line x1="12" y1="15" x2="12" y2="3"/>
+                            </svg>
+                            下载 PDF
+                        </button>
+                        <button class="action-btn copy-content" id="copyContentBtn">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>
+                                <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
+                            </svg>
+                            复制内容
+                        </button>
+                    </div>
+                    <div class="content-display" id="contentDisplay"></div>
+                </div>
+
+                <!-- 思维导图标签页 -->
+                <div class="tab-pane" id="mindmapPane">
+                    <div class="mindmap-actions">
+                        <button class="action-btn expand-all" id="expandAllBtn">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <circle cx="12" cy="12" r="3"/>
+                                <path d="M12 1v6m0 6v6m11-7h-6m-6 0H1"/>
+                            </svg>
+                            全部展开
+                        </button>
+                        <button class="action-btn collapse-all" id="collapseAllBtn">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <circle cx="12" cy="12" r="3"/>
+                                <path d="M12 1v6m0 6v6M4 12h6m6 0h6"/>
+                            </svg>
+                            全部收起
+                        </button>
+                        <button class="action-btn reset-view" id="resetViewBtn">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <polyline points="23 4 23 10 17 10"/>
+                                <polyline points="1 20 1 14 7 14"/>
+                                <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/>
+                            </svg>
+                            重置视图
+                        </button>
+                    </div>
+                    <div class="mindmap-container" id="mindmapContainer"></div>
+                </div>
+
+                <!-- 动画演示标签页 -->
+                <div class="tab-pane" id="animationPane">
+                    <div class="animation-controls">
+                        <div class="progress-container">
+                            <input type="range" class="progress-slider" id="progressSlider" min="0" max="100" value="0">
+                            <div class="step-indicators" id="stepIndicators"></div>
+                        </div>
+                        <div class="control-buttons">
+                            <button class="control-btn" id="prevBtn" disabled>
+                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <polyline points="15 18 9 12 15 6"/>
+                                </svg>
+                            </button>
+                            <button class="control-btn play-pause" id="playPauseBtn">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <polygon points="5 3 19 12 5 21 5 3"/>
+                                </svg>
+                            </button>
+                            <button class="control-btn" id="nextBtn">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <polyline points="9 18 15 12 9 6"/>
+                                </svg>
+                            </button>
+                        </div>
+                        <div class="speed-control">
+                            <label>播放速度:</label>
+                            <select class="speed-select" id="speedSelect">
+                                <option value="0.5">0.5x</option>
+                                <option value="1" selected>1x</option>
+                                <option value="1.5">1.5x</option>
+                                <option value="2">2x</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="animation-container" id="animationContainer"></div>
+                </div>
+            </div>
+
+            <!-- 加载状态 -->
+            <div class="loading-overlay" id="loadingOverlay">
+                <div class="loading-spinner">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M21 12a9 9 0 1 1-6.219-8.56"/>
+                    </svg>
+                </div>
+                <p class="loading-text">正在生成内容...</p>
+            </div>
+        </main>
+
+        <footer class="footer">
+            <p>&copy; 2026 U_learner. 使用 AI 技术为您提供个性化学习体验</p>
+        </footer>
+    </div>
+
+    <!-- 通知提示 -->
+    <div id="notification" class="notification" style="display: none;"></div>
+
+    <!-- 第三方库 -->
+    <script src="lib/axios.min.js"></script>
+    <script src="lib/html2pdf.min.js"></script>
+    <script src="lib/d3.min.js"></script>
+    <script src="lib/gsap.min.js"></script>
+
+    <!-- 应用脚本 -->
+    <script src="config/api-config.js"></script>
+    <script src="js/api.js"></script>
+    <script src="js/pdf-generator.js"></script>
+    <script src="js/mindmap.js"></script>
+    <script src="js/animations.js"></script>
+    <script src="js/result.js"></script>
+</body>
+</html>

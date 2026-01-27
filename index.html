@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    <title>U_learner - 在线学习助手</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <h1 class="logo" data-text="U_learner">U_learner</h1>
+            <p class="tagline">AI驱动的智能学习助手</p>
+        </header>
+
+        <main class="main-content">
+            <div class="search-section">
+                <form id="searchForm" class="search-form">
+                    <div class="form-group">
+                        <label for="searchInput">您想学习什么内容？</label>
+                        <input
+                            type="text"
+                            id="searchInput"
+                            class="search-input"
+                            placeholder="例如：JavaScript基础、Python编程、机器学习入门..."
+                            required
+                        >
+                    </div>
+
+                    <div class="form-group">
+                        <label for="apiKeyInput">API 密钥</label>
+                        <input
+                            type="password"
+                            id="apiKeyInput"
+                            class="api-input"
+                            placeholder="输入您的 OpenAI API 密钥"
+                        >
+                        <button type="button" class="toggle-password" id="togglePassword">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                                <circle cx="12" cy="12" r="3"/>
+                            </svg>
+                        </button>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="aiServiceSelect">选择 AI 服务</label>
+                        <select id="aiServiceSelect" class="service-select"></select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="modelSelect">选择模型</label>
+                        <select id="modelSelect" class="model-select"></select>
+                    </div>
+
+                    <div class="form-group">
+                        <label>选择学习方式</label>
+                        <div class="learning-options">
+                            <label class="option-card">
+                                <input type="checkbox" name="learningMode" value="pdf" checked>
+                                <span class="option-icon">📄</span>
+                                <span class="option-label">PDF 文档</span>
+                            </label>
+                            <label class="option-card">
+                                <input type="checkbox" name="learningMode" value="mindmap">
+                                <span class="option-icon">🧠</span>
+                                <span class="option-label">思维导图</span>
+                            </label>
+                            <label class="option-card">
+                                <input type="checkbox" name="learningMode" value="animation">
+                                <span class="option-icon">🎬</span>
+                                <span class="option-label">动画演示</span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="security-warning">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+                            <path d="M12 8v4"/>
+                            <path d="M12 16h.01"/>
+                        </svg>
+                        <span>您的API密钥将仅保存在浏览器本地，不会上传到任何服务器</span>
+                    </div>
+
+                    <button type="submit" class="submit-btn" id="submitBtn">
+                        <span class="btn-text">开始学习</span>
+                        <span class="btn-loader" style="display: none;">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M21 12a9 9 0 1 1-6.219-8.56"/>
+                            </svg>
+                        </span>
+                    </button>
+                </form>
+            </div>
+
+            <div class="recent-searches" id="recentSearches">
+                <h3>最近搜索</h3>
+                <ul id="recentList"></ul>
+            </div>
+        </main>
+
+        <footer class="footer">
+            <div class="footer-content">
+                <p>&copy; 2026 U_learner. 使用 AI 技术为您提供个性化学习体验</p>
+                <div class="footer-links">
+                    <a href="docs.html" target="_blank">技术文档</a>
+                    <a href="https://github.com/Karovia" target="_blank" rel="noopener">GitHub</a>
+                    <div class="contact-info">
+                        <span>邮箱：luopeilindeqq123@foxmail.com</span>
+                        <span>QQ：3454960152</span>
+                        <span>微信：KaroviaWrench</span>
+                    </div>
+                </div>
+            </div>
+        </footer>
+    </div>
+
+    <div id="notification" class="notification" style="display: none;"></div>
+
+    <!-- 内联初始化代码 - 确保下拉菜单始终显示 -->
+    <script>
+        (function() {
+            console.log('内联初始化代码执行...');
+
+            // 定义服务配置
+            const services = {
+                openai: 'OpenAI',
+                gemini: 'Google Gemini',
+                claude: 'Anthropic Claude',
+                deepseek: 'Deepseek',
+                zhipu: '智谱 AI (ChatGLM)',
+                doubao: '豆包',
+                kouzi: '扣子 AI'
+            };
+
+            // 定义模型配置
+            const models = {
+                openai: {
+                    'gpt-3.5-turbo': 'GPT-3.5 Turbo',
+                    'gpt-4': 'GPT-4',
+                    'gpt-4-turbo': 'GPT-4 Turbo',
+                    'gpt-4o': 'GPT-4O',
+                    'gpt-4o-mini': 'GPT-4O Mini'
+                },
+                gemini: {
+                    'gemini-pro': 'Gemini Pro',
+                    'gemini-1.5-pro': 'Gemini 1.5 Pro',
+                    'gemini-1.5-flash': 'Gemini 1.5 Flash'
+                },
+                claude: {
+                    'claude-3-haiku-20240307': 'Claude 3 Haiku',
+                    'claude-3-sonnet-20240229': 'Claude 3 Sonnet',
+                    'claude-3-opus-20240229': 'Claude 3 Opus',
+                    'claude-3-5-sonnet-20241022': 'Claude 3.5 Sonnet'
+                },
+                deepseek: {
+                    'deepseek-chat': 'Deepseek Chat',
+                    'deepseek-coder': 'Deepseek Coder'
+                },
+                zhipu: {
+                    'glm-4': 'GLM-4',
+                    'glm-4v': 'GLM-4V',
+                    'glm-4.6v': 'GLM-4.6V',
+                    'glm-4.5-air': 'GLM-4.5 Air',
+                    'glm-4.7': 'GLM-4.7',
+                    'glm-3-turbo': 'GLM-3 Turbo'
+                },
+                doubao: {
+                    'doubao-pro-4k': '豆包 Pro 4K',
+                    'doubao-pro-32k': '豆包 Pro 32K',
+                    'doubao-lite': '豆包 Lite'
+                },
+                kouzi: {
+                    'kouzi-pro': '扣子 Pro',
+                    'kouzi-lite': '扣子 Lite'
+                }
+            };
+
+            // 等待 DOM 加载
+            function initSelects() {
+                const serviceSelect = document.getElementById('aiServiceSelect');
+                const modelSelect = document.getElementById('modelSelect');
+
+                if (!serviceSelect || !modelSelect) {
+                    console.error('未找到 select 元素，延迟重试...');
+                    setTimeout(initSelects, 100);
+                    return;
+                }
+
+                console.log('开始填充服务列表...');
+
+                // 填充服务列表
+                Object.entries(services).forEach(([serviceId, serviceName]) => {
+                    const option = document.createElement('option');
+                    option.value = serviceId;
+                    option.textContent = serviceName;
+                    serviceSelect.appendChild(option);
+                    console.log(`添加服务: ${serviceId} - ${serviceName}`);
+                });
+
+                // 初始化模型列表（默认 OpenAI）
+                updateModels(serviceSelect.value);
+
+                // 绑定事件
+                serviceSelect.addEventListener('change', function() {
+                    console.log('服务切换事件触发:', this.value);
+                    updateModels(this.value);
+                });
+            }
+
+            // 更新模型列表
+            function updateModels(serviceId) {
+                const modelSelect = document.getElementById('modelSelect');
+                const apiKeyInput = document.getElementById('apiKeyInput');
+                if (!modelSelect) {
+                    console.error('未找到 modelSelect');
+                    return;
+                }
+
+                console.log(`更新模型列表: ${serviceId}`);
+
+                modelSelect.innerHTML = '';
+
+                const serviceModels = models[serviceId];
+                if (serviceModels) {
+                    Object.entries(serviceModels).forEach(([modelId, modelName]) => {
+                        const option = document.createElement('option');
+                        option.value = modelId;
+                        option.textContent = modelName;
+                        modelSelect.appendChild(option);
+                        console.log(`添加模型: ${modelId} - ${modelName}`);
+                    });
+                }
+
+                // 更新 API 密钥输入框的 placeholder
+                if (apiKeyInput) {
+                    const serviceName = services[serviceId];
+                    if (serviceName) {
+                        apiKeyInput.placeholder = `输入您的 ${serviceName} API 密钥`;
+                        console.log(`更新 placeholder: ${apiKeyInput.placeholder}`);
+                    }
+                }
+            }
+
+            // 开始初始化
+            if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', initSelects);
+            } else {
+                initSelects();
+            }
+        })();
+    </script>
+
+    <!-- 第三方库 -->
+    <script src="lib/axios.min.js"></script>
+    <script src="lib/html2pdf.min.js"></script>
+    <script src="lib/d3.min.js"></script>
+    <script src="lib/gsap.min.js"></script>
+
+    <!-- 应用脚本 -->
+    <script src="config/api-config.js?v=5.1"></script>
+    <script src="js/api.js?v=5.1"></script>
+    <script src="js/app.js?v=5.1"></script>
+    <script src="js/aurora.js"></script>
+</body>
+</html>

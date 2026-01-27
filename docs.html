@@ -1,0 +1,659 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>技术文档 - U_learner</title>
+    <link rel="stylesheet" href="css/style.css">
+    <style>
+        /* 文档页面特有样式 */
+        body {
+            font-family: 'Courier New', monospace;
+            background: #000000;
+            background: radial-gradient(ellipse at center, #0a0a0a 0%, #000000 100%);
+            min-height: 100vh;
+            color: #e0e0e0;
+        }
+
+        :root {
+            --primary-color: #00ff88;
+            --primary-hover: #00cc66;
+            --secondary-color: #ff0088;
+            --background-light: #1a1a1a;
+            --background-white: #0d0d0d;
+            --text-primary: #ffffff;
+            --text-secondary: #b0b0b0;
+            --border-color: #333333;
+            --shadow: 0 2px 8px rgba(0, 255, 136, 0.2);
+            --shadow-hover: 0 4px 16px rgba(0, 255, 136, 0.3);
+            --radius: 8px;
+            --radius-lg: 12px;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 40px 20px;
+            min-height: 100vh;
+            position: relative;
+            z-index: 1;
+        }
+
+        .docs-container {
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 30px;
+            background: #0d0d0d;
+            border: 2px solid var(--border-color);
+            border-radius: var(--radius-lg);
+            box-shadow: 0 8px 32px rgba(0, 255, 136, 0.3),
+                        inset 0 0 20px rgba(255, 0, 136, 0.1);
+        }
+
+        .docs-header {
+            text-align: center;
+            margin-bottom: 40px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid var(--border-color);
+        }
+
+        .docs-header h1 {
+            color: var(--primary-color);
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            font-family: 'Press Start 2P', 'Courier New', monospace;
+            letter-spacing: 2px;
+            text-shadow: 2px 2px 4px rgba(0, 255, 136, 0.3);
+        }
+
+        .docs-header .tagline {
+            color: var(--text-secondary);
+            font-size: 1rem;
+            font-family: 'Courier New', monospace;
+        }
+
+        .docs-nav {
+            background: var(--background-light);
+            padding: 25px;
+            border-radius: var(--radius);
+            margin-bottom: 30px;
+            border: 1px solid var(--border-color);
+        }
+
+        .docs-nav h3 {
+            margin-bottom: 15px;
+            color: var(--primary-color);
+            font-family: 'Courier New', monospace;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .docs-nav ul {
+            list-style: none;
+        }
+
+        .docs-nav li {
+            margin-bottom: 10px;
+        }
+
+        .docs-nav a {
+            color: var(--text-primary);
+            text-decoration: none;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            font-family: 'Courier New', monospace;
+            display: block;
+            padding: 8px 12px;
+            border-radius: 4px;
+        }
+
+        .docs-nav a:hover {
+            background: rgba(0, 255, 136, 0.1);
+            color: var(--primary-color);
+            transform: translateX(5px);
+        }
+
+        .docs-content {
+            line-height: 1.8;
+        }
+
+        .docs-content h2 {
+            color: var(--primary-color);
+            margin-top: 40px;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid var(--border-color);
+            font-family: 'Courier New', monospace;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .docs-content h3 {
+            color: var(--text-primary);
+            margin-top: 30px;
+            margin-bottom: 15px;
+            font-size: 1.2rem;
+        }
+
+        .docs-content p {
+            margin-bottom: 20px;
+            color: #e0e0e0;
+            font-size: 1.05rem;
+        }
+
+        .docs-content ul,
+        .docs-content ol {
+            margin-bottom: 20px;
+            padding-left: 30px;
+        }
+
+        .docs-content li {
+            margin-bottom: 10px;
+            color: #d0d0d0;
+            line-height: 1.8;
+        }
+
+        .docs-content code {
+            background: rgba(0, 255, 136, 0.15);
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-family: 'Consolas', 'Monaco', monospace;
+            font-size: 0.9rem;
+            color: var(--primary-color);
+            border: 1px solid rgba(0, 255, 136, 0.3);
+        }
+
+        .docs-content pre {
+            background: #1a1a1a;
+            padding: 20px;
+            border-radius: var(--radius);
+            overflow-x: auto;
+            margin-bottom: 25px;
+            border: 1px solid var(--border-color);
+            font-size: 0.95rem;
+        }
+
+        .docs-content pre code {
+            background: transparent;
+            border: none;
+            padding: 0;
+            color: #e0e0e0;
+        }
+
+        .docs-content blockquote {
+            border-left: 4px solid var(--primary-color);
+            padding-left: 20px;
+            margin: 20px 0;
+            color: var(--text-secondary);
+            font-style: italic;
+            background: rgba(0, 255, 136, 0.05);
+            padding: 15px 20px;
+            border-radius: 4px;
+        }
+
+        .docs-content table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 0;
+            background: transparent;
+        }
+
+        .docs-content th,
+        .docs-content td {
+            border: 1px solid var(--border-color);
+            padding: 15px;
+            text-align: left;
+            color: #e0e0e0;
+        }
+
+        .docs-content th {
+            background: #1a1a1a;
+            font-weight: 600;
+            color: var(--primary-color);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-family: 'Courier New', monospace;
+        }
+
+        .docs-content tr:nth-child(even) {
+            background: rgba(0, 255, 136, 0.05);
+        }
+
+        .docs-content tr:hover {
+            background: rgba(0, 255, 136, 0.1);
+        }
+
+        /* 表格容器样式 - 支持横向滚动 */
+        .table-container {
+            overflow-x: auto;
+            border-radius: var(--radius);
+            margin-bottom: 25px;
+            border: 1px solid var(--border-color);
+            background: var(--background-light);
+            /* 自定义滚动条样式 */
+            scrollbar-width: thin;
+            scrollbar-color: var(--primary-color) var(--background-light);
+        }
+
+        /* Webkit浏览器滚动条样式 */
+        .table-container::-webkit-scrollbar {
+            height: 8px;
+        }
+
+        .table-container::-webkit-scrollbar-track {
+            background: var(--background-light);
+            border-radius: 4px;
+        }
+
+        .table-container::-webkit-scrollbar-thumb {
+            background: var(--primary-color);
+            border-radius: 4px;
+        }
+
+        .table-container::-webkit-scrollbar-thumb:hover {
+            background: var(--primary-hover);
+        }
+
+        .back-button {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 12px 24px;
+            background: linear-gradient(135deg, var(--primary-color) 0%, #0088ff 100%);
+            color: white;
+            text-decoration: none;
+            border-radius: var(--radius);
+            transition: all 0.3s ease;
+            margin-bottom: 30px;
+            font-family: 'Courier New', monospace;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            border: 1px solid var(--border-color);
+            box-shadow: 0 4px 15px rgba(0, 255, 136, 0.3);
+        }
+
+        .back-button:hover {
+            background: linear-gradient(135deg, #0088ff 0%, var(--secondary-color) 100%);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0, 255, 136, 0.4);
+        }
+
+        .footer {
+            margin-top: 40px;
+            color: var(--text-secondary);
+            opacity: 0.8;
+            font-size: 0.9rem;
+        }
+
+        @media (max-width: 768px) {
+            .docs-container {
+                padding: 20px;
+            }
+
+            .docs-header h1 {
+                font-size: 2rem;
+            }
+
+            .docs-nav {
+                margin-bottom: 20px;
+            }
+
+            .docs-content table {
+                font-size: 0.9rem;
+            }
+
+            .docs-content th,
+            .docs-content td {
+                padding: 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- 极光背景将在aurora.js中自动创建 -->
+
+    <div class="container">
+        <a href="index.html" class="back-button">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M19 12H5M12 19l-7-7 7-7"/>
+            </svg>
+            返回主页
+        </a>
+
+        <div class="docs-container">
+            <header class="docs-header">
+                <h1>技术文档</h1>
+                <p class="tagline">U_learner 项目架构与实现细节</p>
+            </header>
+
+            <nav class="docs-nav">
+                <h3>文档导航</h3>
+                <ul>
+                    <li><a href="#overview">项目概述</a></li>
+                    <li><a href="#architecture">架构设计</a></li>
+                    <li><a href="#api">API设计</a></li>
+                    <li><a href="#ui">UI/UX设计</a></li>
+                    <li><a href="#security">安全设计</a></li>
+                    <li><a href="#deployment">部署和运维</a></li>
+                    <li><a href="#development">开发规范</a></li>
+                    <li><a href="#maintenance">维护和升级</a></li>
+                </ul>
+            </nav>
+
+            <main class="docs-content">
+                <section id="overview">
+                    <h2>项目概述</h2>
+                    <p>U_learner 是一个基于纯前端技术栈的在线学习平台，采用模块化设计，支持多种AI服务集成。用户可以输入学习内容，系统会调用AI生成PDF文档、思维导图和动画演示等多种格式的学习材料。</p>
+
+                    <h3>核心特点</h3>
+                    <ul>
+                        <li><strong>多AI服务支持</strong>：集成OpenAI、Google Gemini、Claude等7种AI服务</li>
+                        <li><strong>多种学习方式</strong>：支持PDF文档、思维导图、动画演示三种输出格式</li>
+                        <li><strong>响应式设计</strong>：完美适配桌面和移动设备</li>
+                        <li><strong>本地存储</strong>：API密钥和用户设置保存在浏览器本地</li>
+                        <li><strong>一键生成</strong>：自动整理学习资料并生成多种格式</li>
+                    </ul>
+                </section>
+
+                <section id="architecture">
+                    <h2>架构设计</h2>
+
+                    <h3>分层架构</h3>
+                    <pre><code>┌─────────────────────────────────────────────────────┐
+│                    用户界面层                       │
+│  ┌─────────────┐  ┌──────────────┐  ┌────────────┐ │
+│  │   主页面     │  │  结果页面     │  │   其他页面  │ │
+│  └─────────────┘  └──────────────┘  └────────────┘ │
+└─────────────────────────────────────────────────────┘
+                              │
+┌─────────────────────────────────────────────────────┐
+│                    应用逻辑层                       │
+│  ┌─────────────┐  ┌──────────────┐  ┌────────────┐ │
+│  │  主应用     │  │  API客户端   │  │ 结果处理    │ │
+│  │   (app.js)  │  │   (api.js)   │  │  (result.js)│ │
+│  └─────────────┘  └──────────────┘  └────────────┘ │
+└─────────────────────────────────────────────────────┘</code></pre>
+
+                    <h3>数据流设计</h3>
+                    <p>搜索流程：</p>
+                    <ol>
+                        <li>用户输入学习内容</li>
+                        <li>表单验证和API密钥检查</li>
+                        <li>调用对应的AI服务API</li>
+                        <li>生成学习内容</li>
+                        <li>保存结果到sessionStorage</li>
+                        <li>跳转到结果页面展示</li>
+                    </ol>
+                </section>
+
+                <section id="api">
+                    <h2>API设计</h2>
+
+                    <h3>服务提供商适配</h3>
+                    <div class="table-container">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>服务</th>
+                                    <th>API端点</th>
+                                    <th>认证方式</th>
+                                    <th>API Key格式</th>
+                                    <th>响应格式</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>OpenAI</td>
+                                    <td>https://api.openai.com/v1/chat/completions</td>
+                                    <td>Bearer Token</td>
+                                    <td><code>sk-proj-...</code> 或 <code>sk-...</code><br>51-56字符</td>
+                                    <td>choices[0].message.content</td>
+                                </tr>
+                                <tr>
+                                    <td>Gemini</td>
+                                    <td>https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent</td>
+                                    <td>API Key</td>
+                                    <td><code>AIza...</code><br>39字符</td>
+                                    <td>candidates[0].content.parts[0].text</td>
+                                </tr>
+                                <tr>
+                                    <td>Claude</td>
+                                    <td>https://api.anthropic.com/v1/messages</td>
+                                    <td>x-api-key</td>
+                                    <td><code>sk-ant-api03-...</code><br>103字符</td>
+                                    <td>content[0].text</td>
+                                </tr>
+                                <tr>
+                                    <td>Deepseek</td>
+                                    <td>https://api.deepseek.com/v1/chat/completions</td>
+                                    <td>Bearer Token</td>
+                                    <td><code>sk-...</code><br>48-51字符</td>
+                                    <td>choices[0].message.content</td>
+                                </tr>
+                                <tr>
+                                    <td>智谱AI</td>
+                                    <td>https://open.bigmodel.cn/api/paas/v4/chat/completions</td>
+                                    <td>Bearer Token</td>
+                                    <td><code>id.secret</code><br>点号分隔</td>
+                                    <td>choices[0].message.content</td>
+                                </tr>
+                                <tr>
+                                    <td>豆包</td>
+                                    <td>https://ark.cn-beijing.volces.com/api/v3/chat/completions</td>
+                                    <td>Bearer Token</td>
+                                    <td><code>ak-...</code> 或 <code>sk-...</code></td>
+                                    <td>choices[0].message.content</td>
+                                </tr>
+                                <tr>
+                                    <td>扣子AI</td>
+                                    <td>https://ark.cn-hangzhou.volces.com/api/v3/chat/completions</td>
+                                    <td>Bearer Token</td>
+                                    <td><code>pat_...</code></td>
+                                    <td>choices[0].message.content</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <h3>API客户端设计</h3>
+                    <pre><code>class APIClient {
+    // 核心方法
+    sendRequest(service, payload)      // 发送请求
+    generateLearningContent(config)    // 生成内容
+    validateApiKey(apiKey, service)   // 验证密钥
+
+    // 辅助方法
+    getSupportedServices()             // 获取服务列表
+    getUserSettings()                  // 获取用户设置
+    formatResponse()                   // 格式化响应
+}</code></pre>
+                </section>
+
+                <section id="ui">
+                    <h2>UI/UX设计</h2>
+
+                    <h3>设计原则</h3>
+                    <ul>
+                        <li><strong>一致性</strong>：统一的色彩、字体和间距系统</li>
+                        <li><strong>响应式</strong>：自适应不同屏幕尺寸</li>
+                        <li><strong>可访问性</strong>：支持键盘导航和屏幕阅读器</li>
+                        <li><strong>反馈机制</strong>：即时的视觉和文字反馈</li>
+                    </ul>
+
+                    <h3>交互设计</h3>
+                    <div class="table-container">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>组件</th>
+                                    <th>交互方式</th>
+                                    <th>反馈机制</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>搜索表单</td>
+                                    <td>Enter键提交</td>
+                                    <td>加载动画、通知提示</td>
+                                </tr>
+                                <tr>
+                                    <td>AI服务切换</td>
+                                    <td>下拉选择</td>
+                                    <td>密钥格式验证提示</td>
+                                </tr>
+                                <tr>
+                                    <td>学习方式</td>
+                                    <td>复选框卡片</td>
+                                    <td>视觉选中状态</td>
+                                </tr>
+                                <tr>
+                                    <td>结果标签</td>
+                                    <td>点击切换</td>
+                                    <td>平滑过渡动画</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </section>
+
+                <section id="security">
+                    <h2>安全设计</h2>
+
+                    <h3>数据安全</h3>
+                    <ul>
+                        <li><strong>API密钥保护</strong>：仅存储在localStorage，不通过网络传输</li>
+                        <li><strong>输入验证</strong>：前端格式验证和后端API密钥验证</li>
+                        <li><strong>XSS防护</strong>：对用户输入进行过滤和转义</li>
+                        <li><strong>CSP策略</strong>：限制资源加载来源，禁用不必要的内容</li>
+                    </ul>
+
+                    <h3>错误处理</h3>
+                    <pre><code>const errorTypes = {
+    NETWORK_ERROR: { retry: true, message: '网络连接错误' },
+    API_KEY_INVALID: { retry: false, message: 'API密钥无效' },
+    RATE_LIMIT: { retry: true, message: '请求过于频繁' },
+    SERVICE_UNAVAILABLE: { retry: true, message: '服务不可用' },
+    CONTENT_ERROR: { retry: false, message: '内容生成失败' }
+};</code></pre>
+                </section>
+
+                <section id="deployment">
+                    <h2>部署和运维</h2>
+
+                    <h3>部署架构</h3>
+                    <pre><code>┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐
+│    GitHub       │    │    CDN         │    │    用户浏览器    │
+│    Repository    │───▶│    Distribution │───▶│                │
+│                 │    │                 │    │                │
+│ - 源代码管理     │    │ - 静态资源缓存  │    │ - 应用运行      │
+│ - 版本控制       │    │ - 全球加速      │    │ - 本地数据存储  │
+│ - 自动部署       │    │ - HTTPS加密     │    │ - 离线功能      │
+└─────────────────┘    └─────────────────┘    └─────────────────┘</code></pre>
+
+                    <h3>GitHub Pages部署步骤</h3>
+                    <ol>
+                        <li>创建GitHub仓库（必须是Public仓库）</li>
+                        <li>将代码推送到仓库</li>
+                        <li>进入仓库Settings → Pages</li>
+                        <li>选择Source为"Deploy from a branch"</li>
+                        <li>Branch选择"main"，目录选择"/(root)"</li>
+                        <li>点击Save，几分钟后即可访问</li>
+                    </ol>
+                </section>
+
+                <section id="development">
+                    <h2>开发规范</h2>
+
+                    <h3>JavaScript规范</h3>
+                    <pre><code>// 命名约定
+class U_learnerApp {}           // 类名使用PascalCase
+const apiClient = {}             // 变量使用camelCase
+const MAX_RETRIES = 3           // 常量使用SCREAMING_SNAKE_CASE
+
+// 函数设计
+async function generateContent(config) {
+    // 参数验证
+    if (!config) throw new Error('配置不能为空');
+
+    // 业务逻辑
+    const result = await callAPI(config);
+
+    // 返回格式化数据
+    return {
+        success: true,
+        data: result,
+        timestamp: new Date()
+    };
+}</code></pre>
+
+                    <h3>Git工作流</h3>
+                    <pre><code>main (生产分支)
+├── develop (开发分支)
+│   ├── feature/api-integration
+│   ├── feature/mobile-optimization
+│   └── bugfix/security-patch
+└── hotfix/emergency-fix</code></pre>
+                </section>
+
+                <section id="maintenance">
+                    <h2>维护和升级</h2>
+
+                    <h3>依赖管理</h3>
+                    <div class="table-container">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>库名</th>
+                                    <th>版本</th>
+                                    <th>用途</th>
+                                    <th>更新策略</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>Axios</td>
+                                    <td>^1.6.0</td>
+                                    <td>HTTP请求</td>
+                                    <td>定期检查安全更新</td>
+                                </tr>
+                                <tr>
+                                    <td>html2pdf.js</td>
+                                    <td>^0.10.1</td>
+                                    <td>PDF生成</td>
+                                    <td>重大版本测试后更新</td>
+                                </tr>
+                                <tr>
+                                    <td>D3.js</td>
+                                    <td>^7.8.5</td>
+                                    <td>数据可视化</td>
+                                    <td>按需更新</td>
+                                </tr>
+                                <tr>
+                                    <td>GSAP</td>
+                                    <td>^3.12.5</td>
+                                    <td>动画</td>
+                                    <td>定期更新</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <h3>监控指标</h3>
+                    <ul>
+                        <li><strong>前端性能</strong>：FCP、LCP、FID等核心指标</li>
+                        <li><strong>业务指标</strong>：搜索成功率、生成耗时、用户停留时长</li>
+                        <li><strong>错误监控</strong>：JS错误、API错误、资源加载错误</li>
+                    </ul>
+                </section>
+            </main>
+        </div>
+    </div>
+
+    <footer class="footer">
+        <p>&copy; 2026 U_learner. 使用 AI 技术为您提供个性化学习体验</p>
+    </footer>
+
+    <!-- 极光背景脚本 -->
+    <script src="js/aurora.js"></script>
+</body>
+</html>
