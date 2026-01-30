@@ -1279,31 +1279,38 @@ ${allAssistantContent.substring(0, 3000)}${allAssistantContent.length > 3000 ? '
         return html;
     }
 
-    // ========== 阶段四：去除重复标题 ==========
-    // 清理重复的一级标题
+    // ========== 阶段四：去除重复标题（增强版） ==========
+    // 清理重复的所有级别标题（H1-H6）
     removeDuplicateHeadings(markdown) {
         const lines = markdown.split('\n');
-        const seenHeadings = new Set();
+        const seenHeadings = new Set();  // 使用 Set 追踪所有级别标题
         const result = [];
         let removedCount = 0;
 
-        lines.forEach(line => {
-            // 检查是否是一级标题
-            const h1Match = line.match(/^#\s+(.+)$/);
-            if (h1Match) {
-                const title = h1Match[1].trim();
-                if (seenHeadings.has(title)) {
-                    console.warn(`发现重复标题，已跳过: "${title}"`);
+        lines.forEach((line, index) => {
+            // 检查是否是任何级别的标题（H1-H6）
+            const headingMatch = line.match(/^(#{1,6})\s+(.+)$/);
+            if (headingMatch) {
+                const level = headingMatch[1];  // #, ##, ### 等
+                const title = headingMatch[2].trim();
+                const key = `${level}|${title}`;  // 级别+标题作为唯一键
+
+                if (seenHeadings.has(key)) {
+                    console.warn(`发现重复标题（行${index + 1}），已跳过: "${level} ${title}"`);
                     removedCount++;
                     return; // 跳过重复标题
                 }
-                seenHeadings.add(title);
+
+                seenHeadings.add(key);
+                console.log(`✓ 保留标题: "${level} ${title}"`);
             }
             result.push(line);
         });
 
         if (removedCount > 0) {
             console.log(`✅ 共去除 ${removedCount} 个重复标题`);
+        } else {
+            console.log(`✓ 未发现重复标题，共 ${seenHeadings.size} 个唯一标题`);
         }
 
         return result.join('\n');
