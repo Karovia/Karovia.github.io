@@ -111,16 +111,8 @@ class U_learnerApp {
             }
         });
 
-        // 学习方式卡片点击
-        document.querySelectorAll('.option-card').forEach(card => {
-            card.addEventListener('click', (e) => {
-                if (e.target.type !== 'checkbox') {
-                    const checkbox = card.querySelector('input[type="checkbox"]');
-                    checkbox.checked = !checkbox.checked;
-                    checkbox.dispatchEvent(new Event('change'));
-                }
-            });
-        });
+        // 学习方式卡片样式更新
+        this.updateLearningModeStyles();
 
         // 最近搜索项点击
         this.recentList.addEventListener('click', (e) => {
@@ -136,6 +128,8 @@ class U_learnerApp {
                 // 更新学习方式
                 this.learningModeCheckboxes.forEach(checkbox => {
                     checkbox.checked = modes.includes(checkbox.value);
+                    // 触发 change 事件以更新样式
+                    checkbox.dispatchEvent(new Event('change'));
                 });
 
                 this.handleSearch();
@@ -346,10 +340,17 @@ class U_learnerApp {
             this.apiClient.saveApiKey(apiKey);
             this.apiClient.saveUserSettings({ aiService: service, model: model });
 
+            // 优先生成 PDF（如果选择了 PDF）
+            const modesToGenerate = selectedModes.includes('pdf') ? ['pdf'] : selectedModes.slice(0, 1);
+            const remainingModes = selectedModes.filter(m => !modesToGenerate.includes(m));
+
+            console.log('当前生成模式:', modesToGenerate);
+            console.log('待生成模式:', remainingModes);
+
             // 生成学习内容
             const results = await this.apiClient.generateLearningContent({
                 topic: topic,
-                modes: selectedModes,
+                modes: modesToGenerate,
                 service: service,
                 model: model,
                 timestamp: new Date().toISOString()
@@ -364,7 +365,9 @@ class U_learnerApp {
                 const resultData = {
                     topic: topic,
                     service: service,
+                    model: model,
                     results: results,
+                    remainingModes: remainingModes,  // 保存待生成的模式
                     timestamp: new Date().toISOString()
                 };
 
@@ -374,7 +377,7 @@ class U_learnerApp {
                 // 跳转到结果页面
                 window.location.href = 'result.html';
             } else {
-                throw new Error('所有学习内容的生成都失败了');
+                throw new Error('PDF 生成失败');
             }
 
         } catch (error) {
@@ -458,6 +461,34 @@ class U_learnerApp {
         if (savedApiKey) {
             this.apiKeyInput.value = savedApiKey;
         }
+    }
+
+    // 更新卡片样式
+    updateCardStyle(card, isChecked) {
+        if (isChecked) {
+            card.classList.add('selected');
+        } else {
+            card.classList.remove('selected');
+        }
+    }
+
+    // 更新学习方式卡片样式
+    updateLearningModeStyles() {
+        document.querySelectorAll('.option-card').forEach(card => {
+            const checkbox = card.querySelector('input[type="checkbox"]');
+
+            // 监听复选框变化
+            if (checkbox) {
+                checkbox.addEventListener('change', () => {
+                    this.updateCardStyle(card, checkbox.checked);
+                });
+
+                // 初始化样式（如果有默认选中的）
+                if (checkbox.checked) {
+                    this.updateCardStyle(card, true);
+                }
+            }
+        });
     }
 
     // 显示通知

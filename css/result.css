@@ -146,6 +146,16 @@
     transform: translateY(0);
 }
 
+/* 继续生成其他模式按钮样式 */
+.action-btn.continue-generate-modes {
+    background: var(--secondary-color);
+}
+
+.action-btn.continue-generate-modes:hover {
+    background: #ff00aa;
+    box-shadow: 0 4px 16px rgba(255, 0, 136, 0.3);
+}
+
 .content-display {
     max-height: 600px;
     overflow-y: auto;

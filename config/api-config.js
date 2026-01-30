@@ -27,27 +27,50 @@ const APIConfig = {
                 'Content-Type': 'application/json',
                 'Authorization': `Bearer ${localStorage.getItem('apiKey') || ''}`
             }),
-            formatPrompt: (topic, mode, model = 'gpt-3.5-turbo') => {
+            formatPrompt: (topic, mode, model = 'gpt-3.5-turbo', options = {}) => {
                 const modePrompts = {
-                    pdf: `请为"${topic}"创建一个详细的学习指南，包括基础概念、核心知识点、实践案例和进阶建议。请用Markdown格式编写，结构清晰，易于阅读。`,
+                    pdf: `请为"${topic}"创建一个详细的学习指南，包括基础概念、核心知识点、实践案例和进阶建议。要求：
+1. 用Markdown格式编写，结构清晰，易于阅读
+2. 每个章节完成后，用简洁的语言总结该章节的要点
+3. 章节总结格式：> **本章总结**：[总结内容]
+4. 确保内容的完整性和逻辑连贯性`,
                     mindmap: `请为"${topic}"创建一个思维导图大纲，包含主要分支和子分支，用层级结构展示知识点的逻辑关系。`,
                     animation: `请为"${topic}"创建一个分步骤的学习指南，将复杂内容分解为循序渐进的学习步骤，每个步骤包含关键概念和示例。`
                 };
-                return {
+
+                // 构建消息数组
+                const messages = [];
+
+                // 添加系统消息
+                messages.push({
+                    role: 'system',
+                    content: '你是一位专业的学习助手，擅长将复杂知识转化为易于理解的格式。'
+                });
+
+                // 添加对话历史（如果有）
+                if (options.history && Array.isArray(options.history) && options.history.length > 0) {
+                    messages.push(...options.history);
+                }
+
+                // 添加当前用户消息
+                messages.push({
+                    role: 'user',
+                    content: options.continuePrompt || (modePrompts[mode] || modePrompts.pdf)
+                });
+
+                const config = {
                     model: model,
-                    messages: [
-                        {
-                            role: 'system',
-                            content: '你是一位专业的学习助手，擅长将复杂知识转化为易于理解的格式。'
-                        },
-                        {
-                            role: 'user',
-                            content: modePrompts[mode] || modePrompts.pdf
-                        }
-                    ],
-                    max_tokens: 2000,
-                    temperature: 0.7
+                    messages: messages,
+                    max_tokens: options.maxTokens || 3000,
+                    temperature: options.temperature || 0.7
                 };
+
+                // 添加流式支持
+                if (options.stream !== false) {
+                    config.stream = true;
+                }
+
+                return config;
             }
         },
 
@@ -64,25 +87,32 @@ const APIConfig = {
             requiredHeaders: () => ({
                 'Content-Type': 'application/json'
             }),
-            formatPrompt: (topic, mode, model = 'gemini-pro') => {
+            formatPrompt: (topic, mode, model = 'gemini-pro', options = {}) => {
                 const modePrompts = {
                     pdf: `请为"${topic}"创建一个详细的学习指南，包括基础概念、核心知识点、实践案例和进阶建议。请用Markdown格式编写，结构清晰，易于阅读。`,
                     mindmap: `请为"${topic}"创建一个思维导图大纲，包含主要分支和子分支，用层级结构展示知识点的逻辑关系。`,
                     animation: `请为"${topic}"创建一个分步骤的学习指南，将复杂内容分解为循序渐进的学习步骤，每个步骤包含关键概念和示例。`
                 };
-                return {
+                const config = {
                     contents: [{
                         parts: [{
                             text: modePrompts[mode] || modePrompts.pdf
                         }]
                     }],
                     generationConfig: {
-                        temperature: 0.7,
+                        temperature: options.temperature || 0.7,
                         topK: 1,
                         topP: 1,
-                        maxOutputTokens: 2000
+                        maxOutputTokens: options.maxTokens || 1500
                     }
                 };
+
+                // Gemini 流式支持
+                if (options.stream !== false) {
+                    config.generationConfig.streamOutput = true;
+                }
+
+                return config;
             }
         },
 
@@ -102,16 +132,16 @@ const APIConfig = {
                 'x-api-key': localStorage.getItem('apiKey') || '',
                 'anthropic-version': '2023-06-01'
             }),
-            formatPrompt: (topic, mode, model = 'claude-3-haiku-20240307') => {
+            formatPrompt: (topic, mode, model = 'claude-3-haiku-20240307', options = {}) => {
                 const modePrompts = {
                     pdf: `请为"${topic}"创建一个详细的学习指南，包括基础概念、核心知识点、实践案例和进阶建议。请用Markdown格式编写，结构清晰，易于阅读。`,
                     mindmap: `请为"${topic}"创建一个思维导图大纲，包含主要分支和子分支，用层级结构展示知识点的逻辑关系。`,
                     animation: `请为"${topic}"创建一个分步骤的学习指南，将复杂内容分解为循序渐进的学习步骤，每个步骤包含关键概念和示例。`
                 };
-                return {
+                const config = {
                     model: model,
-                    max_tokens: 2000,
-                    temperature: 0.7,
+                    max_tokens: options.maxTokens || 1500,
+                    temperature: options.temperature || 0.7,
                     messages: [
                         {
                             role: 'user',
@@ -119,6 +149,13 @@ const APIConfig = {
                         }
                     ]
                 };
+
+                // Claude 流式支持
+                if (options.stream !== false) {
+                    config.stream = true;
+                }
+
+                return config;
             }
         },
 
@@ -135,13 +172,13 @@ const APIConfig = {
                 'Content-Type': 'application/json',
                 'Authorization': `Bearer ${localStorage.getItem('apiKey') || ''}`
             }),
-            formatPrompt: (topic, mode, model = 'deepseek-chat') => {
+            formatPrompt: (topic, mode, model = 'deepseek-chat', options = {}) => {
                 const modePrompts = {
                     pdf: `请为"${topic}"创建一个详细的学习指南，包括基础概念、核心知识点、实践案例和进阶建议。请用Markdown格式编写，结构清晰，易于阅读。`,
                     mindmap: `请为"${topic}"创建一个思维导图大纲，包含主要分支和子分支，用层级结构展示知识点的逻辑关系。`,
                     animation: `请为"${topic}"创建一个分步骤的学习指南，将复杂内容分解为循序渐进的学习步骤，每个步骤包含关键概念和示例。`
                 };
-                return {
+                const config = {
                     model: model,
                     messages: [
                         {
@@ -153,10 +190,16 @@ const APIConfig = {
                             content: modePrompts[mode] || modePrompts.pdf
                         }
                     ],
-                    max_tokens: 2000,
-                    temperature: 0.7,
-                    stream: false
+                    max_tokens: options.maxTokens || 1500,
+                    temperature: options.temperature || 0.7
                 };
+
+                // Deepseek 流式支持
+                if (options.stream !== false) {
+                    config.stream = true;
+                }
+
+                return config;
             }
         },
 
@@ -177,13 +220,13 @@ const APIConfig = {
                 'Content-Type': 'application/json',
                 'Authorization': `Bearer ${localStorage.getItem('apiKey') || ''}`
             }),
-            formatPrompt: (topic, mode, model = 'glm-4') => {
+            formatPrompt: (topic, mode, model = 'glm-4', options = {}) => {
                 const modePrompts = {
                     pdf: `请为"${topic}"创建一个详细的学习指南，包括基础概念、核心知识点、实践案例和进阶建议。请用Markdown格式编写，结构清晰，易于阅读。`,
                     mindmap: `请为"${topic}"创建一个思维导图大纲，包含主要分支和子分支，用层级结构展示知识点的逻辑关系。`,
                     animation: `请为"${topic}"创建一个分步骤的学习指南，将复杂内容分解为循序渐进的学习步骤，每个步骤包含关键概念和示例。`
                 };
-                return {
+                const config = {
                     model: model,
                     messages: [
                         {
@@ -195,10 +238,16 @@ const APIConfig = {
                             content: modePrompts[mode] || modePrompts.pdf
                         }
                     ],
-                    max_tokens: 2000,
-                    temperature: 0.7,
-                    stream: false
+                    max_tokens: options.maxTokens || 1500,
+                    temperature: options.temperature || 0.7
                 };
+
+                // 智谱 AI 流式支持
+                if (options.stream !== false) {
+                    config.stream = true;
+                }
+
+                return config;
             }
         },
 
@@ -216,13 +265,13 @@ const APIConfig = {
                 'Content-Type': 'application/json',
                 'Authorization': `Bearer ${localStorage.getItem('apiKey') || ''}`
             }),
-            formatPrompt: (topic, mode, model = 'doubao-pro-4k') => {
+            formatPrompt: (topic, mode, model = 'doubao-pro-4k', options = {}) => {
                 const modePrompts = {
                     pdf: `请为"${topic}"创建一个详细的学习指南，包括基础概念、核心知识点、实践案例和进阶建议。请用Markdown格式编写，结构清晰，易于阅读。`,
                     mindmap: `请为"${topic}"创建一个思维导图大纲，包含主要分支和子分支，用层级结构展示知识点的逻辑关系。`,
                     animation: `请为"${topic}"创建一个分步骤的学习指南，将复杂内容分解为循序渐进的学习步骤，每个步骤包含关键概念和示例。`
                 };
-                return {
+                const config = {
                     model: model,
                     messages: [
                         {
@@ -234,9 +283,16 @@ const APIConfig = {
                             content: modePrompts[mode] || modePrompts.pdf
                         }
                     ],
-                    max_tokens: 2000,
-                    temperature: 0.7
+                    max_tokens: options.maxTokens || 1500,
+                    temperature: options.temperature || 0.7
                 };
+
+                // 豆包 流式支持
+                if (options.stream !== false) {
+                    config.stream = true;
+                }
+
+                return config;
             }
         },
 
@@ -253,13 +309,13 @@ const APIConfig = {
                 'Content-Type': 'application/json',
                 'Authorization': `Bearer ${localStorage.getItem('apiKey') || ''}`
             }),
-            formatPrompt: (topic, mode, model = 'kouzi-pro') => {
+            formatPrompt: (topic, mode, model = 'kouzi-pro', options = {}) => {
                 const modePrompts = {
                     pdf: `请为"${topic}"创建一个详细的学习指南，包括基础概念、核心知识点、实践案例和进阶建议。请用Markdown格式编写，结构清晰，易于阅读。`,
                     mindmap: `请为"${topic}"创建一个思维导图大纲，包含主要分支和子分支，用层级结构展示知识点的逻辑关系。`,
                     animation: `请为"${topic}"创建一个分步骤的学习指南，将复杂内容分解为循序渐进的学习步骤，每个步骤包含关键概念和示例。`
                 };
-                return {
+                const config = {
                     model: model,
                     messages: [
                         {
@@ -271,9 +327,16 @@ const APIConfig = {
                             content: modePrompts[mode] || modePrompts.pdf
                         }
                     ],
-                    max_tokens: 2000,
-                    temperature: 0.7
+                    max_tokens: options.maxTokens || 1500,
+                    temperature: options.temperature || 0.7
                 };
+
+                // 扣子 流式支持
+                if (options.stream !== false) {
+                    config.stream = true;
+                }
+
+                return config;
             }
         }
     },
@@ -316,10 +379,11 @@ const APIConfig = {
     // 错误消息配置
     errorMessages: {
         NETWORK_ERROR: '网络连接错误，请检查您的网络设置',
-        API_KEY_INVALID: 'API密钥无效，请检查您的API密钥',
+        API_KEY_INVALID: 'API密钥无效，请确认您的API密钥是否正确填写',
+        API_KEY_MISSING: '请先输入API密钥',
         RATE_LIMIT: '请求过于频繁，请稍后再试',
         SERVICE_UNAVAILABLE: '服务暂时不可用，请稍后再试',
-        CONTENT_ERROR: '内容生成失败，请重试',
+        CONTENT_ERROR: 'AI返回内容为空，可能原因：\n1. 提示词太简单，AI无法生成足够内容\n2. API服务暂时不可用\n3. Token数量限制\n建议：尝试增加maxTokens或更换AI服务',
         UNKNOWN_ERROR: '发生未知错误，请重试'
     },
 
@@ -336,7 +400,11 @@ const APIConfig = {
         learningModes: ['pdf'],
         fontSize: 16,
         theme: 'light',
-        autoSave: true
+        autoSave: true,
+        // 流式输出配置（暂时禁用以确保稳定性）
+        enableStream: false,
+        maxTokens: 3000,  // 单次生成长度限制（增加到 3000）
+        temperature: 0.7
     },
 
     // 验证配置

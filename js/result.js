@@ -729,7 +729,7 @@ ${allAssistantContent.substring(0, 3000)}${allAssistantContent.length > 3000 ? '
         }
     }
 
-    // 下载PDF - v5.9 优化版
+    // 下载PDF - v5.10 修复版
     downloadPdf() {
         // 使用原始 Markdown 内容而不是从 DOM 中提取
         const content = this.rawMarkdownContent || '';
@@ -753,65 +753,57 @@ ${allAssistantContent.substring(0, 3000)}${allAssistantContent.length > 3000 ? '
             day: 'numeric'
         });
 
-        // ========== 方案二：美化封面页 ==========
+        // ========== 封面页 - 简化版（兼容 html2pdf） ==========
         const coverHTML = `
             <div class="cover-page" style="
                 page-break-after: always;
                 page-break-before: avoid;
                 text-align: center;
-                padding: 0;
-                min-height: 100vh;
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                padding: 120px 60px 80px 60px;
+                background-color: #f8f9fa;
             ">
                 <div style="
                     background: white;
-                    padding: 80px 60px;
-                    border-radius: 16px;
-                    box-shadow: 0 20px 60px rgba(0,0,0,0.3);
-                    max-width: 600px;
-                    width: 90%;
+                    padding: 60px 50px;
+                    border: 2px solid #52bbb1;
+                    margin: 0 auto;
+                    max-width: 500px;
                 ">
                     <h1 style="
-                        font-size: 36pt;
+                        font-size: 32pt;
                         font-weight: 400;
                         color: #1d1d20;
-                        margin: 0 0 24px 0;
+                        margin: 0 0 20px 0;
                         line-height: 1.3;
                         border-bottom: none;
                     ">${title}</h1>
 
                     <div style="
-                        width: 100px;
-                        height: 5px;
-                        background: linear-gradient(90deg, #52bbb1 0%, #349890 100%);
-                        margin: 0 auto 32px auto;
-                        border-radius: 3px;
+                        width: 80px;
+                        height: 4px;
+                        background-color: #52bbb1;
+                        margin: 20px auto;
                     "></div>
 
                     <p style="
-                        font-size: 18pt;
+                        font-size: 16pt;
                         color: #666;
-                        margin: 0 0 48px 0;
+                        margin: 30px 0 40px 0;
                         font-weight: 300;
-                        letter-spacing: 1px;
                     ">AI 驱动的个性化学习文档</p>
 
                     <div style="
-                        margin-top: 80px;
-                        padding-top: 40px;
-                        border-top: 2px solid #e8e8e8;
+                        margin-top: 60px;
+                        padding-top: 30px;
+                        border-top: 1px solid #e8e8e8;
                         font-size: 11pt;
                         color: #999;
                         line-height: 1.8;
                     ">
-                        <p style="margin: 8px 0; font-weight: 500; color: #52bbb1;">
-                            📘 U_learner v5.9
+                        <p style="margin: 6px 0; font-weight: 500; color: #52bbb1;">
+                            U_learner v5.10
                         </p>
-                        <p style="margin: 8px 0;">生成时间：${date}</p>
-                        <p style="margin: 8px 0;">智能学习 · 高效成长</p>
+                        <p style="margin: 6px 0;">生成时间：${date}</p>
                     </div>
                 </div>
             </div>
@@ -864,30 +856,14 @@ ${allAssistantContent.substring(0, 3000)}${allAssistantContent.length > 3000 ? '
             padding: 0;
         `;
 
-        // ========== 方案一 & 三：增强分页控制 + 页眉页脚样式 ==========
+        // ========== CSS 样式 - 兼容 html2pdf ==========
         const styleElement = document.createElement('style');
         styleElement.textContent = `
-            @page {
-                margin: 20mm 15mm 20mm 15mm;
-                @bottom-right {
-                    content: "第 " counter(page) " 页";
-                    font-size: 9pt;
-                    color: #999;
-                    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-                }
-                @bottom-left {
-                    content: "U_learner 学习指南";
-                    font-size: 9pt;
-                    color: #999;
-                    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-                }
-            }
-
             /* ========== 基础样式 ========== */
 
             /* 内容区域 */
             .pdf-content {
-                padding: 0 40px;
+                padding: 30px 50px;
             }
 
             /* 正文首行缩进 - 中文书刊标准 */
@@ -897,9 +873,10 @@ ${allAssistantContent.substring(0, 3000)}${allAssistantContent.length > 3000 ? '
                 line-height: 1.8 !important;
                 text-align: justify !important;
                 text-justify: inter-ideograph !important;
-                orphans: 2 !important;
-                widows: 2 !important;
+                orphans: 3 !important;
+                widows: 3 !important;
                 font-size: 11pt;
+                page-break-inside: avoid !important;
             }
 
             /* 标题后的首个段落不缩进 */
@@ -926,7 +903,7 @@ ${allAssistantContent.substring(0, 3000)}${allAssistantContent.length > 3000 ? '
                 margin-bottom: 24px !important;
                 color: #1d1d20 !important;
                 page-break-before: always !important;
-                padding-top: 40px !important;
+                padding-top: 20px !important;
             }
 
             /* 封面页的 h1 特殊处理 */
@@ -939,10 +916,10 @@ ${allAssistantContent.substring(0, 3000)}${allAssistantContent.length > 3000 ? '
             /* 章节分隔装饰 */
             .chapter-separator {
                 width: 100%;
-                height: 3px;
-                background: linear-gradient(90deg, #52bbb1 0%, transparent 100%);
-                margin: 40px 0 20px 0;
-                page-break-after: avoid;
+                height: 2px;
+                background-color: #52bbb1;
+                margin: 30px 0 15px 0;
+                page-break-after: avoid !important;
             }
 
             /* 二级标题 - 节标题 */
@@ -1040,31 +1017,21 @@ ${allAssistantContent.substring(0, 3000)}${allAssistantContent.length > 3000 ? '
                 color: #1d1d20 !important;
             }
 
-            /* ========== 本章总结样式 - 方案五 ========== */
+            /* ========== 本章总结样式 - 简化版 ========== */
 
             .chapter-summary {
-                margin: 24px 0 !important;
-                padding: 20px 24px !important;
-                background: linear-gradient(135deg, #f0f9f8 0%, #e8f5f3 100%) !important;
-                border-left: 5px solid #52bbb1 !important;
-                border-radius: 8px !important;
+                margin: 20px 0 !important;
+                padding: 16px 20px !important;
+                background-color: #f0f9f8 !important;
+                border-left: 4px solid #52bbb1 !important;
                 page-break-inside: avoid !important;
-                box-shadow: 0 2px 8px rgba(82, 187, 177, 0.15);
             }
 
             .chapter-summary .summary-title {
                 font-size: 12pt;
                 font-weight: 600;
                 color: #52bbb1;
-                margin-bottom: 10px;
-                display: flex;
-                align-items: center;
-            }
-
-            .chapter-summary .summary-title::before {
-                content: "💡";
-                margin-right: 8px;
-                font-size: 14pt;
+                margin-bottom: 8px;
             }
 
             .chapter-summary p {
@@ -1078,11 +1045,10 @@ ${allAssistantContent.substring(0, 3000)}${allAssistantContent.length > 3000 ? '
 
             blockquote {
                 border-left: 4px solid #52bbb1 !important;
-                padding: 14px 18px !important;
-                margin: 18px 0 !important;
+                padding: 12px 16px !important;
+                margin: 16px 0 !important;
                 color: #666 !important;
-                background: #fafafa !important;
-                border-radius: 0 6px 6px 0 !important;
+                background-color: #fafafa !important;
                 page-break-inside: avoid !important;
                 line-height: 1.8 !important;
             }
@@ -1097,10 +1063,7 @@ ${allAssistantContent.substring(0, 3000)}${allAssistantContent.length > 3000 ? '
                 border-collapse: collapse !important;
                 width: 100% !important;
                 margin: 20px 0 !important;
-                border-radius: 8px !important;
-                overflow: hidden !important;
                 page-break-inside: avoid !important;
-                box-shadow: 0 2px 8px rgba(0,0,0,0.08);
             }
 
             th, td {
@@ -1132,10 +1095,8 @@ ${allAssistantContent.substring(0, 3000)}${allAssistantContent.length > 3000 ? '
             img {
                 max-width: 100% !important;
                 height: auto !important;
-                border-radius: 8px !important;
                 margin: 20px 0 !important;
                 page-break-inside: avoid !important;
-                box-shadow: 0 4px 12px rgba(0,0,0,0.1);
             }
 
             /* ========== 链接样式 ========== */
@@ -1196,16 +1157,20 @@ ${allAssistantContent.substring(0, 3000)}${allAssistantContent.length > 3000 ? '
         element.appendChild(styleElement);
 
         const opt = {
-            margin: [20, 15, 20, 15],
+            margin: [15, 15, 15, 15],
             filename: `${this.resultData.topic}_学习指南.pdf`,
             image: { type: 'jpeg', quality: 0.98 },
-            pagebreak: { mode: ['avoid-all', 'css', 'legacy'] },
+            pagebreak: {
+                mode: ['avoid-all', 'css', 'legacy'],
+                before: '.cover-page',
+                after: '.cover-page',
+                avoid: ['.no-break', 'pre', 'blockquote', 'table', 'img', '.chapter-summary', 'h1', 'h2', 'h3']
+            },
             html2canvas: {
                 scale: 2,
                 backgroundColor: '#ffffff',
                 useCORS: true,
-                logging: false,
-                letterRendering: true
+                logging: false
             },
             jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
         };
