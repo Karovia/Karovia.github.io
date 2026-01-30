@@ -729,11 +729,32 @@ ${allAssistantContent.substring(0, 3000)}${allAssistantContent.length > 3000 ? '
         }
     }
 
-    // 下载PDF - v5.10 修复版
+    // 下载PDF - v5.11 修复版
     downloadPdf() {
         // 使用原始 Markdown 内容而不是从 DOM 中提取
-        const content = this.rawMarkdownContent || '';
-        console.log('准备下载 PDF，原始内容长度:', content.length);
+        let content = this.rawMarkdownContent || '';
+
+        // ========== 阶段一：添加调试日志 ==========
+        console.log('========== PDF 生成调试信息 ==========');
+        console.log('原始 Markdown 内容长度:', content.length);
+        console.log('原始 Markdown 前500字符:', content.substring(0, 500));
+
+        // 检查是否有重复的章节标题
+        const h1Matches = content.match(/^#\s+.+$/gm);
+        if (h1Matches) {
+            console.log('所有一级标题:', h1Matches);
+            console.log('一级标题数量:', h1Matches.length);
+
+            // 检查是否有重复
+            const uniqueTitles = [...new Set(h1Matches)];
+            if (uniqueTitles.length < h1Matches.length) {
+                console.warn('⚠️ 发现重复的一级标题！');
+                console.warn('重复的标题:', h1Matches.filter((item, index) =>
+                    h1Matches.indexOf(item) !== index
+                ));
+            }
+        }
+        // ======================================
 
         if (!content) {
             this.showNotification('没有可下载的内容', 'warning');
@@ -744,6 +765,11 @@ ${allAssistantContent.substring(0, 3000)}${allAssistantContent.length > 3000 ? '
             this.showNotification('PDF下载功能未加载', 'error');
             return;
         }
+
+        // ========== 阶段四：去除重复标题 ==========
+        content = this.removeDuplicateHeadings(content);
+        console.log('去重后内容长度:', content.length);
+        // ======================================
 
         // 创建完整的HTML文档，包含封面页和目录
         const title = this.resultData.topic || '学习指南';
@@ -845,6 +871,19 @@ ${allAssistantContent.substring(0, 3000)}${allAssistantContent.length > 3000 ? '
         // 创建内容元素
         const element = document.createElement('div');
         element.innerHTML = coverHTML + tocHTML + enhancedContent;
+
+        // ========== 调试日志：最终内容统计 ==========
+        console.log('---------- 最终内容统计 ----------');
+        console.log('封面页长度:', coverHTML.length);
+        console.log('目录长度:', tocHTML.length);
+        console.log('增强内容长度:', enhancedContent.length);
+        console.log('最终总长度:', element.innerHTML.length);
+
+        // 统计 h1 标签
+        const finalH1 = element.innerHTML.match(/<h1[^>]*>.*?<\/h1>/g);
+        console.log('最终 h1 标签:', finalH1);
+        console.log('最终 h1 数量:', finalH1 ? finalH1.length : 0);
+        // ======================================
 
         // 应用 Hello 算法风格的样式
         element.style.cssText = `
@@ -1156,15 +1195,16 @@ ${allAssistantContent.substring(0, 3000)}${allAssistantContent.length > 3000 ? '
         `;
         element.appendChild(styleElement);
 
+        // ========== 阶段三：优化分页控制 ==========
         const opt = {
             margin: [15, 15, 15, 15],
             filename: `${this.resultData.topic}_学习指南.pdf`,
             image: { type: 'jpeg', quality: 0.98 },
             pagebreak: {
-                mode: ['avoid-all', 'css', 'legacy'],
+                mode: 'legacy',  // 改用 legacy 模式，更稳定
                 before: '.cover-page',
                 after: '.cover-page',
-                avoid: ['.no-break', 'pre', 'blockquote', 'table', 'img', '.chapter-summary', 'h1', 'h2', 'h3']
+                avoid: ['tr', 'li', '.no-break', 'pre', 'blockquote', 'table', 'img', '.chapter-summary', 'h1', 'h2', 'h3']
             },
             html2canvas: {
                 scale: 2,
@@ -1174,6 +1214,8 @@ ${allAssistantContent.substring(0, 3000)}${allAssistantContent.length > 3000 ? '
             },
             jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
         };
+        console.log('PDF 配置:', opt);
+        // ======================================
 
         this.showNotification('正在生成 PDF...', 'info');
 
@@ -1190,16 +1232,29 @@ ${allAssistantContent.substring(0, 3000)}${allAssistantContent.length > 3000 ? '
     enhanceMarkdownForPDF(markdown, mainTitle) {
         let html = this.renderMarkdown(markdown);
 
-        // 为每个一级标题（除了第一个，即封面标题）添加章节分隔
+        // ========== 调试日志：渲染后的 HTML ==========
+        console.log('---------- 渲染后的 HTML ----------');
+        const h1InHtml = html.match(/<h1[^>]*>.*?<\/h1>/g);
+        if (h1InHtml) {
+            console.log('HTML 中的 h1 标签:', h1InHtml);
+            console.log('HTML 中 h1 数量:', h1InHtml.length);
+        }
+        console.log('渲染后 HTML 长度:', html.length);
+        // ======================================
+
+        // ========== 阶段二：修复章节分隔 Bug ==========
+        // 为每个一级标题（除了第一个）添加章节分隔
+        let h1Count = 0;
         html = html.replace(/<h1([^>]*)>/g, (match, attrs) => {
-            // 检查是否是第一个 h1
-            const firstH1Index = html.indexOf('<h1');
-            const currentH1Index = html.indexOf(match);
-            if (firstH1Index === currentH1Index) {
+            h1Count++;
+            console.log(`处理第 ${h1Count} 个 h1 标签`);
+            if (h1Count === 1) {
                 return match; // 第一个 h1 不添加分隔符
             }
             return '<div class="chapter-separator"></div>' + match;
         });
+        console.log('章节分隔添加完成，共处理', h1Count, '个 h1 标签');
+        // ======================================
 
         // 优化"本章总结"样式
         html = html.replace(
@@ -1223,6 +1278,37 @@ ${allAssistantContent.substring(0, 3000)}${allAssistantContent.length > 3000 ? '
 
         return html;
     }
+
+    // ========== 阶段四：去除重复标题 ==========
+    // 清理重复的一级标题
+    removeDuplicateHeadings(markdown) {
+        const lines = markdown.split('\n');
+        const seenHeadings = new Set();
+        const result = [];
+        let removedCount = 0;
+
+        lines.forEach(line => {
+            // 检查是否是一级标题
+            const h1Match = line.match(/^#\s+(.+)$/);
+            if (h1Match) {
+                const title = h1Match[1].trim();
+                if (seenHeadings.has(title)) {
+                    console.warn(`发现重复标题，已跳过: "${title}"`);
+                    removedCount++;
+                    return; // 跳过重复标题
+                }
+                seenHeadings.add(title);
+            }
+            result.push(line);
+        });
+
+        if (removedCount > 0) {
+            console.log(`✅ 共去除 ${removedCount} 个重复标题`);
+        }
+
+        return result.join('\n');
+    }
+    // ==========================================
 
     // 复制内容
     copyContent() {
