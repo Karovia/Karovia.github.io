@@ -729,7 +729,7 @@ ${allAssistantContent.substring(0, 3000)}${allAssistantContent.length > 3000 ? '
         }
     }
 
-    // 下载PDF
+    // 下载PDF - v5.9 优化版
     downloadPdf() {
         // 使用原始 Markdown 内容而不是从 DOM 中提取
         const content = this.rawMarkdownContent || '';
@@ -753,298 +753,459 @@ ${allAssistantContent.substring(0, 3000)}${allAssistantContent.length > 3000 ? '
             day: 'numeric'
         });
 
-        // 生成目录
-        const headings = content.match(/^#+\s+.+$/gm) || [];
-        let tocHTML = '<div style="page-break-after: always; padding: 40px; margin-bottom: 30px;">';
-        tocHTML += '<h2 style="color: #1d1d20; border-bottom: 2px solid #52bbb1; padding-bottom: 8px; margin-bottom: 20px;">目录</h2>';
-        tocHTML += '<ul style="list-style: none; padding-left: 0;">';
-
-        headings.forEach((heading, index) => {
-            const level = heading.match(/^#+/)[0].length;
-            const text = heading.replace(/^#+\s+/, '');
-            const indent = (level - 1) * 20;
-            tocHTML += `<li style="margin-bottom: 8px; padding-left: ${indent}px;"><a href="#section-${index}" style="color: #1d1d20; text-decoration: none; border-bottom: 1px dotted #ccc;">${index + 1}. ${text}</a></li>`;
-        });
-
-        tocHTML += '</ul></div>';
-
-        // 生成封面页
+        // ========== 方案二：美化封面页 ==========
         const coverHTML = `
-            <div style="page-break-after: always; text-align: center; padding: 80px 40px;">
-                <h1 style="font-size: 32pt; font-weight: 400; color: #1d1d20; margin-bottom: 20px;">${title}</h1>
-                <div style="width: 80px; height: 3px; background: #52bbb1; margin: 30px auto; border-radius: 2px;"></div>
-                <p style="font-size: 16pt; color: #666; margin-bottom: 40px;">AI 驱动的个性化学习文档</p>
-                <div style="font-size: 12pt; color: #999; margin-top: 60px;">
-                    <p>生成时间：${date}</p>
-                    <p>生成工具：U_learner</p>
+            <div class="cover-page" style="
+                page-break-after: always;
+                page-break-before: avoid;
+                text-align: center;
+                padding: 0;
+                min-height: 100vh;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            ">
+                <div style="
+                    background: white;
+                    padding: 80px 60px;
+                    border-radius: 16px;
+                    box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+                    max-width: 600px;
+                    width: 90%;
+                ">
+                    <h1 style="
+                        font-size: 36pt;
+                        font-weight: 400;
+                        color: #1d1d20;
+                        margin: 0 0 24px 0;
+                        line-height: 1.3;
+                        border-bottom: none;
+                    ">${title}</h1>
+
+                    <div style="
+                        width: 100px;
+                        height: 5px;
+                        background: linear-gradient(90deg, #52bbb1 0%, #349890 100%);
+                        margin: 0 auto 32px auto;
+                        border-radius: 3px;
+                    "></div>
+
+                    <p style="
+                        font-size: 18pt;
+                        color: #666;
+                        margin: 0 0 48px 0;
+                        font-weight: 300;
+                        letter-spacing: 1px;
+                    ">AI 驱动的个性化学习文档</p>
+
+                    <div style="
+                        margin-top: 80px;
+                        padding-top: 40px;
+                        border-top: 2px solid #e8e8e8;
+                        font-size: 11pt;
+                        color: #999;
+                        line-height: 1.8;
+                    ">
+                        <p style="margin: 8px 0; font-weight: 500; color: #52bbb1;">
+                            📘 U_learner v5.9
+                        </p>
+                        <p style="margin: 8px 0;">生成时间：${date}</p>
+                        <p style="margin: 8px 0;">智能学习 · 高效成长</p>
+                    </div>
                 </div>
             </div>
         `;
 
+        // ========== 生成目录 ==========
+        const headings = content.match(/^#+\s+.+$/gm) || [];
+        let tocHTML = '<div class="toc" style="page-break-after: always; page-break-before: avoid; padding: 50px 40px;">';
+        tocHTML += '<h2 style="color: #1d1d20; border-bottom: 3px solid #52bbb1; padding-bottom: 12px; margin-bottom: 30px; font-size: 20pt; font-weight: 500;">目录</h2>';
+        tocHTML += '<ul style="list-style: none; padding-left: 0; margin: 0;">';
+
+        let chapterCount = 0;
+        let sectionCount = 0;
+
+        headings.forEach((heading, index) => {
+            const level = heading.match(/^#+/)[0].length;
+            const text = heading.replace(/^#+\s+/, '');
+
+            if (level === 1) {
+                chapterCount++;
+                sectionCount = 0;
+                const indent = 0;
+                tocHTML += `<li style="margin: 16px 0 12px 0; padding-left: ${indent}px;"><a href="#section-${index}" style="color: #1d1d20; text-decoration: none; font-size: 13pt; font-weight: 500; border-bottom: 1px dotted #ccc;">${chapterCount}. ${text}</a></li>`;
+            } else if (level === 2) {
+                sectionCount++;
+                const indent = 24;
+                tocHTML += `<li style="margin: 10px 0; padding-left: ${indent}px;"><a href="#section-${index}" style="color: #555; text-decoration: none; font-size: 11pt; border-bottom: 1px dotted #ddd;">${chapterCount}.${sectionCount} ${text}</a></li>`;
+            } else if (level === 3) {
+                const indent = 48;
+                tocHTML += `<li style="margin: 8px 0; padding-left: ${indent}px;"><a href="#section-${index}" style="color: #777; text-decoration: none; font-size: 10pt; border-bottom: 1px dotted #eee;">· ${text}</a></li>`;
+            }
+        });
+
+        tocHTML += '</ul></div>';
+
+        // ========== 方案四 & 五：优化章节分隔 + 改进本章总结 ==========
+        const enhancedContent = this.enhanceMarkdownForPDF(content, title);
+
         // 创建内容元素
         const element = document.createElement('div');
-        element.innerHTML = coverHTML + tocHTML + this.renderMarkdown(content);
+        element.innerHTML = coverHTML + tocHTML + enhancedContent;
 
         // 应用 Hello 算法风格的样式
         element.style.cssText = `
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Helvetica Neue", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "微软雅黑", "Noto Sans SC", sans-serif;
             font-size: 11pt;
-            line-height: 1.7;
+            line-height: 1.8;
             color: #1d1d20;
             background: #ffffff;
-            padding: 30px 40px;
+            padding: 0;
         `;
 
-        // 添加样式到内容中 - 书籍排版优化版
+        // ========== 方案一 & 三：增强分页控制 + 页眉页脚样式 ==========
         const styleElement = document.createElement('style');
         styleElement.textContent = `
-            /* ========== 书籍排版基础样式 ========== */
+            @page {
+                margin: 20mm 15mm 20mm 15mm;
+                @bottom-right {
+                    content: "第 " counter(page) " 页";
+                    font-size: 9pt;
+                    color: #999;
+                    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+                }
+                @bottom-left {
+                    content: "U_learner 学习指南";
+                    font-size: 9pt;
+                    color: #999;
+                    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+                }
+            }
+
+            /* ========== 基础样式 ========== */
+
+            /* 内容区域 */
+            .pdf-content {
+                padding: 0 40px;
+            }
 
             /* 正文首行缩进 - 中文书刊标准 */
             p {
-                text-indent: 2em;
-                margin-bottom: 0;
-                line-height: 1.8;
-                text-align: justify;
-                text-justify: inter-ideograph;
-                orphans: 3;
-                widows: 3;
+                text-indent: 2em !important;
+                margin-bottom: 0 !important;
+                line-height: 1.8 !important;
+                text-align: justify !important;
+                text-justify: inter-ideograph !important;
+                orphans: 2 !important;
+                widows: 2 !important;
+                font-size: 11pt;
             }
 
             /* 标题后的首个段落不缩进 */
             h1 + p, h2 + p, h3 + p, h4 + p {
-                text-indent: 0;
+                text-indent: 0 !important;
             }
 
-            /* 标题样式 - 符合书籍排版规范 */
+            /* ========== 标题样式 - 增强分页控制 ========== */
+
             h1, h2, h3, h4, h5, h6 {
                 color: #1d1d20 !important;
                 font-weight: 500;
-                page-break-after: avoid;
-                text-align: left;
+                page-break-after: avoid !important;
+                text-align: left !important;
             }
 
-            /* 一级标题 - 章标题 */
+            /* 一级标题 - 章标题，强制新页面开始 */
             h1 {
                 font-size: 22pt !important;
                 font-weight: 400 !important;
-                border-bottom: 2px solid #52bbb1 !important;
-                padding-bottom: 8px;
-                margin-top: 0;
-                margin-bottom: 20px;
+                border-bottom: 3px solid #52bbb1 !important;
+                padding-bottom: 12px !important;
+                margin-top: 0 !important;
+                margin-bottom: 24px !important;
                 color: #1d1d20 !important;
-                page-break-before: always;
+                page-break-before: always !important;
+                padding-top: 40px !important;
             }
 
-            /* 封面页的 h1 不分页 */
+            /* 封面页的 h1 特殊处理 */
             .cover-page h1 {
-                page-break-before: avoid;
+                page-break-before: avoid !important;
+                border-bottom: none !important;
+                padding-top: 0 !important;
+            }
+
+            /* 章节分隔装饰 */
+            .chapter-separator {
+                width: 100%;
+                height: 3px;
+                background: linear-gradient(90deg, #52bbb1 0%, transparent 100%);
+                margin: 40px 0 20px 0;
+                page-break-after: avoid;
             }
 
             /* 二级标题 - 节标题 */
             h2 {
                 font-size: 17pt !important;
                 font-weight: 400 !important;
-                border-bottom: 1px solid #e8e8e8 !important;
-                padding-bottom: 6px;
-                margin-top: 32px;
-                margin-bottom: 16px;
-                page-break-before: avoid;
-                page-break-after: avoid;
+                border-bottom: 2px solid #e8e8e8 !important;
+                padding-bottom: 8px !important;
+                margin-top: 40px !important;
+                margin-bottom: 20px !important;
+                page-break-before: avoid !important;
+                page-break-after: avoid !important;
             }
 
             /* 三级标题 - 小节标题 */
             h3 {
                 font-size: 14pt !important;
                 font-weight: 500 !important;
-                margin-top: 24px;
-                margin-bottom: 12px;
+                margin-top: 28px !important;
+                margin-bottom: 14px !important;
                 color: #349890 !important;
-                page-break-after: avoid;
+                page-break-before: avoid !important;
+                page-break-after: avoid !important;
             }
 
             /* 四级标题 */
             h4 {
                 font-size: 12pt !important;
                 font-weight: 500 !important;
-                margin-top: 16px;
-                margin-bottom: 10px;
+                margin-top: 20px !important;
+                margin-bottom: 12px !important;
                 color: #555 !important;
-                page-break-after: avoid;
+                page-break-after: avoid !important;
             }
 
-            /* 段落间距 */
+            /* 段落间距优化 */
             p + p {
-                margin-top: 0;
+                margin-top: 0 !important;
             }
 
-            h1 + p, h2 + p, h3 + p {
-                margin-top: 8px;
+            h1 + p, h2 + p, h3 + p, h4 + p {
+                margin-top: 10px !important;
             }
 
-            /* 列表样式 */
+            /* ========== 列表样式 ========== */
+
             ul, ol {
-                margin: 12px 0;
-                padding-left: 2em;
-                line-height: 1.8;
+                margin: 16px 0 !important;
+                padding-left: 2em !important;
+                line-height: 1.8 !important;
             }
 
             li {
-                margin-bottom: 4px;
+                margin-bottom: 6px !important;
+                page-break-inside: avoid !important;
             }
 
             /* 列表项内段落不缩进 */
             li p {
-                text-indent: 0;
+                text-indent: 0 !important;
             }
 
-            /* 代码块样式 - 避免跨页分割 */
+            /* ========== 代码块样式 - 避免跨页分割 ========== */
+
             pre {
-                background: #f5f5f5 !important;
-                padding: 14px 16px !important;
-                border-radius: 6px !important;
-                overflow-x: auto;
-                margin: 16px 0 !important;
-                border: 1px solid #e8e8e8 !important;
-                white-space: pre-wrap;
-                font-size: 0.9em;
-                line-height: 1.6;
-                page-break-inside: avoid;
+                background: #f8f9fa !important;
+                padding: 16px 18px !important;
+                border-radius: 8px !important;
+                overflow-x: auto !important;
+                margin: 20px 0 !important;
+                border: 1px solid #dee2e6 !important;
+                white-space: pre-wrap !important;
+                font-size: 0.9em !important;
+                line-height: 1.6 !important;
+                page-break-before: auto !important;
+                page-break-after: auto !important;
+                page-break-inside: avoid !important;
+                max-height: 65vh !important;
+                box-shadow: 0 2px 4px rgba(0,0,0,0.05);
             }
 
             code {
-                background: #f5f5f5 !important;
+                background: #f8f9fa !important;
                 padding: 3px 6px !important;
                 border-radius: 4px !important;
                 font-family: "Fira Code", "JetBrains Mono", "Consolas", "SF Mono", "Monaco", "Courier New", monospace !important;
-                font-size: 0.9em;
-                color: #1d1d20 !important;
+                font-size: 0.9em !important;
+                color: #e83e8c !important;
             }
 
             pre code {
                 background: transparent !important;
                 padding: 0 !important;
                 border-radius: 0 !important;
+                color: #1d1d20 !important;
             }
 
-            /* 引用块样式 - 避免跨页分割 */
+            /* ========== 本章总结样式 - 方案五 ========== */
+
+            .chapter-summary {
+                margin: 24px 0 !important;
+                padding: 20px 24px !important;
+                background: linear-gradient(135deg, #f0f9f8 0%, #e8f5f3 100%) !important;
+                border-left: 5px solid #52bbb1 !important;
+                border-radius: 8px !important;
+                page-break-inside: avoid !important;
+                box-shadow: 0 2px 8px rgba(82, 187, 177, 0.15);
+            }
+
+            .chapter-summary .summary-title {
+                font-size: 12pt;
+                font-weight: 600;
+                color: #52bbb1;
+                margin-bottom: 10px;
+                display: flex;
+                align-items: center;
+            }
+
+            .chapter-summary .summary-title::before {
+                content: "💡";
+                margin-right: 8px;
+                font-size: 14pt;
+            }
+
+            .chapter-summary p {
+                text-indent: 0 !important;
+                margin: 0 !important;
+                color: #333 !important;
+                line-height: 1.7 !important;
+            }
+
+            /* ========== 引用块样式 - 避免跨页分割 ========== */
+
             blockquote {
                 border-left: 4px solid #52bbb1 !important;
-                padding: 12px 16px !important;
-                margin: 16px 0 !important;
+                padding: 14px 18px !important;
+                margin: 18px 0 !important;
                 color: #666 !important;
                 background: #fafafa !important;
-                border-radius: 0 4px 4px 0 !important;
-                page-break-inside: avoid;
-                line-height: 1.8;
+                border-radius: 0 6px 6px 0 !important;
+                page-break-inside: avoid !important;
+                line-height: 1.8 !important;
             }
 
             blockquote p {
-                text-indent: 0;
+                text-indent: 0 !important;
             }
 
-            /* 表格样式 - 避免跨页分割 */
+            /* ========== 表格样式 - 避免跨页分割 ========== */
+
             table {
-                border-collapse: collapse;
-                width: 100%;
-                margin: 16px 0;
-                border-radius: 6px;
-                overflow: hidden;
-                page-break-inside: avoid;
+                border-collapse: collapse !important;
+                width: 100% !important;
+                margin: 20px 0 !important;
+                border-radius: 8px !important;
+                overflow: hidden !important;
+                page-break-inside: avoid !important;
+                box-shadow: 0 2px 8px rgba(0,0,0,0.08);
             }
 
             th, td {
-                border: 1px solid #e8e8e8;
-                padding: 10px 12px;
-                text-align: left;
-                line-height: 1.6;
+                border: 1px solid #dee2e6 !important;
+                padding: 12px 14px !important;
+                text-align: left !important;
+                line-height: 1.6 !important;
             }
 
             th {
-                background: #f5f5f5 !important;
-                font-weight: 500;
+                background: #f8f9fa !important;
+                font-weight: 600 !important;
                 color: #1d1d20 !important;
             }
 
             tr:nth-child(even) {
-                background: #fafafa;
+                background: #fafafa !important;
             }
 
-            /* 强调文本 */
+            /* ========== 强调文本 ========== */
+
             strong {
-                color: #1d1d20;
-                font-weight: 600;
+                color: #1d1d20 !important;
+                font-weight: 600 !important;
             }
 
-            /* 图片样式 - 避免跨页分割 */
+            /* ========== 图片样式 - 避免跨页分割 ========== */
+
             img {
-                max-width: 100%;
-                height: auto;
-                border-radius: 6px;
-                margin: 16px 0;
-                page-break-inside: avoid;
+                max-width: 100% !important;
+                height: auto !important;
+                border-radius: 8px !important;
+                margin: 20px 0 !important;
+                page-break-inside: avoid !important;
+                box-shadow: 0 4px 12px rgba(0,0,0,0.1);
             }
 
-            /* 链接样式 */
+            /* ========== 链接样式 ========== */
+
             a {
                 color: #349890 !important;
-                text-decoration: none;
-                border-bottom: 1px solid transparent;
+                text-decoration: none !important;
+                border-bottom: 1px solid transparent !important;
             }
 
-            /* 分隔线 */
+            /* ========== 分隔线 ========== */
+
             hr {
-                border: none;
-                border-top: 1px solid #e8e8e8;
-                margin: 24px 0;
+                border: none !important;
+                border-top: 2px solid #e8e8e8 !important;
+                margin: 32px 0 !important;
             }
 
-            /* 避免孤行寡行 */
-            .pdf-content > *:first-child {
-                page-break-before: avoid;
-            }
+            /* ========== 目录样式 ========== */
 
-            /* 目录样式 */
             .toc {
-                page-break-after: always;
-                page-break-before: avoid;
+                page-break-after: always !important;
+                page-break-before: avoid !important;
             }
 
             .toc h2 {
-                margin-top: 0;
+                margin-top: 0 !important;
+                border-bottom: 3px solid #52bbb1 !important;
             }
 
             .toc ul {
-                list-style: none;
-                padding-left: 0;
+                list-style: none !important;
+                padding-left: 0 !important;
             }
 
             .toc li {
-                margin: 8px 0;
-                line-height: 1.6;
+                margin: 12px 0 !important;
+                line-height: 1.6 !important;
             }
 
             .toc a {
-                color: #1d1d20;
+                color: #1d1d20 !important;
             }
 
-            /* 封面页 */
+            /* ========== 封面页 ========== */
+
             .cover-page {
-                page-break-after: always;
-                page-break-before: avoid;
+                page-break-after: always !important;
+                page-break-before: avoid !important;
+            }
+
+            /* ========== 特殊内容块不跨页 ========== */
+
+            .no-break {
+                page-break-inside: avoid !important;
             }
         `;
         element.appendChild(styleElement);
 
         const opt = {
-            margin: [10, 10, 10, 10],
+            margin: [20, 15, 20, 15],
             filename: `${this.resultData.topic}_学习指南.pdf`,
             image: { type: 'jpeg', quality: 0.98 },
+            pagebreak: { mode: ['avoid-all', 'css', 'legacy'] },
             html2canvas: {
                 scale: 2,
                 backgroundColor: '#ffffff',
                 useCORS: true,
-                logging: false
+                logging: false,
+                letterRendering: true
             },
             jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
         };
@@ -1058,6 +1219,44 @@ ${allAssistantContent.substring(0, 3000)}${allAssistantContent.length > 3000 ? '
             console.error('PDF 生成失败:', error);
             this.showNotification('PDF 生成失败，请重试', 'error');
         }
+    }
+
+    // 增强 Markdown 内容用于 PDF（方案四 & 五）
+    enhanceMarkdownForPDF(markdown, mainTitle) {
+        let html = this.renderMarkdown(markdown);
+
+        // 为每个一级标题（除了第一个，即封面标题）添加章节分隔
+        html = html.replace(/<h1([^>]*)>/g, (match, attrs) => {
+            // 检查是否是第一个 h1
+            const firstH1Index = html.indexOf('<h1');
+            const currentH1Index = html.indexOf(match);
+            if (firstH1Index === currentH1Index) {
+                return match; // 第一个 h1 不添加分隔符
+            }
+            return '<div class="chapter-separator"></div>' + match;
+        });
+
+        // 优化"本章总结"样式
+        html = html.replace(
+            /<blockquote>\s*<p>\s*<strong>\*?本章总结\*?<\/strong>：\s*(.*?)\s*<\/p>\s*<\/blockquote>/g,
+            (match, summary) => {
+                return `
+                    <div class="chapter-summary">
+                        <div class="summary-title">本章要点</div>
+                        <p>${summary}</p>
+                    </div>
+                `;
+            }
+        );
+
+        // 为所有代码块、引用块、表格、图片添加 no-break 类
+        const elementsToAddBreak = ['pre', 'blockquote', 'table', 'img'];
+        elementsToAddBreak.forEach(tag => {
+            const regex = new RegExp(`<${tag}([^>]*)>`, 'gi');
+            html = html.replace(regex, `<${tag}$1 class="no-break">`);
+        });
+
+        return html;
     }
 
     // 复制内容
