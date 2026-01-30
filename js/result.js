@@ -350,7 +350,11 @@ class ResultPage {
                     }
                     console.log('原始 Markdown 内容长度:', this.rawMarkdownContent.length);
 
-                    this.contentDisplay.innerHTML = this.renderMarkdown(this.rawMarkdownContent);
+                    // ========== 应用去重逻辑 ==========
+                    const cleanedContent = this.removeDuplicateHeadings(this.rawMarkdownContent);
+                    this.contentDisplay.innerHTML = this.renderMarkdown(cleanedContent);
+                    console.log('显示内容：去重后', cleanedContent.length, '字符');
+                    // ======================================
                 }
                 break;
             case 'mindmap':
@@ -368,9 +372,8 @@ class ResultPage {
         }
     }
 
-    // 渲染Markdown（简单实现）
+    // 渲染Markdown（修复版 v5.13）
     renderMarkdown(markdown) {
-        // 简单的Markdown渲染
         let html = markdown;
 
         // 先处理代码块（保护内容不被后续处理）
@@ -388,15 +391,16 @@ class ResultPage {
         });
 
         // 标题
+        html = html.replace(/^#### (.+)$/gm, '<h4>$1</h4>');
         html = html.replace(/^### (.+)$/gm, '<h3>$1</h3>');
         html = html.replace(/^## (.+)$/gm, '<h2>$1</h2>');
         html = html.replace(/^# (.+)$/gm, '<h1>$1</h1>');
 
-        // 粗体
+        // 粗体（必须先处理粗体，再处理斜体）
         html = html.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
 
-        // 斜体
-        html = html.replace(/\*(.+?)\*/g, '<em>$1</em>');
+        // 斜体（避免匹配到粗体的一部分）
+        html = html.replace(/(?<!\*)\*(?!\*)(.+?)(?<!\*)\*(?!\*)/g, '<em>$1</em>');
 
         // 恢复行内代码
         html = html.replace(/__INLINE_CODE_(\d+)__/g, (match, index) => {
@@ -408,8 +412,17 @@ class ResultPage {
             return `<pre><code>${this.escapeHtml(codeBlocks[index])}</code></pre>`;
         });
 
-        // 换行（只在非代码块和非 pre 标签的部分）
-        html = html.replace(/\n/g, '<br>');
+        // 处理段落和换行（更智能的处理）
+        // 先按双换行分段
+        const paragraphs = html.split(/\n\n+/);
+        html = paragraphs.map(para => {
+            // 跳过已经是HTML标签的（如 <pre>, <h1>, <h2>, <h3>, <h4>）
+            if (para.trim().match(/^<(pre|h[1-6]|ul|ol|li|blockquote|table)/)) {
+                return para;
+            }
+            // 普通文本段落，保留单换行为 <br>
+            return `<p>${para.replace(/\n/g, '<br>')}</p>`;
+        }).join('\n');
 
         return html;
     }
@@ -623,15 +636,20 @@ ${allAssistantContent.substring(0, 3000)}${allAssistantContent.length > 3000 ? '
         }
     }
 
-    // 追加内容到显示区
+    // 追加内容到显示区（v5.13 修复版）
     appendContent(newContent) {
         if (!newContent || newContent.trim().length === 0) {
             console.error('新内容为空，无法追加');
             return;
         }
 
+        // ========== 去除重复标题 ==========
+        const cleanedContent = this.removeDuplicateHeadings(newContent);
+        console.log('追加内容：去重前', newContent.length, '字符，去重后', cleanedContent.length, '字符');
+        // ======================================
+
         // 追加 Markdown 格式的内容
-        this.contentDisplay.innerHTML = this.contentDisplay.innerHTML + this.renderMarkdown(newContent);
+        this.contentDisplay.innerHTML = this.contentDisplay.innerHTML + this.renderMarkdown(cleanedContent);
 
         // 滚动到底部
         this.contentDisplay.scrollTop = this.contentDisplay.scrollHeight;
@@ -729,10 +747,15 @@ ${allAssistantContent.substring(0, 3000)}${allAssistantContent.length > 3000 ? '
         }
     }
 
-    // 下载PDF - v5.11 修复版
+    // 下载PDF - v5.13 终极修复版
     downloadPdf() {
         // 使用原始 Markdown 内容而不是从 DOM 中提取
         let content = this.rawMarkdownContent || '';
+
+        // ========== 重置标题追踪（确保从头开始检测） ==========
+        this.seenHeadings = new Set();
+        console.log('✓ 已重置标题追踪');
+        // ======================================
 
         // ========== 阶段一：添加调试日志 ==========
         console.log('========== PDF 生成调试信息 ==========');
@@ -1279,11 +1302,15 @@ ${allAssistantContent.substring(0, 3000)}${allAssistantContent.length > 3000 ? '
         return html;
     }
 
-    // ========== 阶段四：去除重复标题（增强版） ==========
-    // 清理重复的所有级别标题（H1-H6）
+    // ========== 阶段四：去除重复标题（终极版） ==========
+    // 清理重复的所有级别标题（H1-H6），支持跨内容检测
     removeDuplicateHeadings(markdown) {
+        // 使用实例属性追踪所有已见过的标题
+        if (!this.seenHeadings) {
+            this.seenHeadings = new Set();
+        }
+
         const lines = markdown.split('\n');
-        const seenHeadings = new Set();  // 使用 Set 追踪所有级别标题
         const result = [];
         let removedCount = 0;
 
@@ -1295,22 +1322,22 @@ ${allAssistantContent.substring(0, 3000)}${allAssistantContent.length > 3000 ? '
                 const title = headingMatch[2].trim();
                 const key = `${level}|${title}`;  // 级别+标题作为唯一键
 
-                if (seenHeadings.has(key)) {
+                if (this.seenHeadings.has(key)) {
                     console.warn(`发现重复标题（行${index + 1}），已跳过: "${level} ${title}"`);
                     removedCount++;
                     return; // 跳过重复标题
                 }
 
-                seenHeadings.add(key);
-                console.log(`✓ 保留标题: "${level} ${title}"`);
+                this.seenHeadings.add(key);
+                console.log(`✓ 保留标题: "${level} ${title}" (总计: ${this.seenHeadings.size} 个标题)`);
             }
             result.push(line);
         });
 
         if (removedCount > 0) {
-            console.log(`✅ 共去除 ${removedCount} 个重复标题`);
+            console.log(`✅ 本次去除 ${removedCount} 个重复标题（累计: ${this.seenHeadings.size} 个唯一标题）`);
         } else {
-            console.log(`✓ 未发现重复标题，共 ${seenHeadings.size} 个唯一标题`);
+            console.log(`✓ 本次未发现重复标题（累计: ${this.seenHeadings.size} 个唯一标题）`);
         }
 
         return result.join('\n');
